@@ -8,7 +8,8 @@ import (
 	"go/printer"
 	"go/token"
 	"log"
-	"strings"
+
+	myast "github.com/kvigen/go-linq/ast"
 )
 
 // TODO: These should obviously not be global variables...
@@ -83,25 +84,10 @@ type parsedSQL struct {
 	From   string
 }
 
-func parse(sql string) parsedSQL {
-	// TOOD: Make this much more sophisticated
-
-	// Find "SELECT" AND "FROM"
-	// TODO: Make this much smarter...
-	selectPos := strings.Index(sql, "SELECT")
-	fromPos := strings.Index(sql, "FROM")
-	if selectPos == -1 || fromPos == -1 || fromPos < selectPos {
-		panic("invalid SQL -- this should really be an error not a panic")
-	}
-
-	// TODO: Bounds checking... or really just a better lexer / parser
-	selectStatement := sql[selectPos+7 : fromPos]
-	fromStatement := sql[fromPos+5 : len(sql)-1]
-
-	return parsedSQL{Select: selectStatement, From: fromStatement}
-}
-
 func (v visitor) Visit(node ast.Node) ast.Visitor {
+
+	// TODO: Add variables while visiting the types so that we can correctly assign
+	// from the SQL
 
 	// TODO: This isn't working...
 
@@ -136,9 +122,9 @@ func (v visitor) Visit(node ast.Node) ast.Visitor {
 		if !ok {
 			panic("something has gone horribly wrong")
 		}
-		sql := parse(arg.Value)
-		fromClause = sql.From
-		fmt.Printf("SQL: %+v\n", sql)
+		node := myast.Parse(arg.Value, "types.Input", "types.Output")
+		fromClause = node.Src.
+			fmt.Printf("SQL: %+v\n", sql)
 
 		iden := expr.(*ast.Ident)
 		iden.Name = "template"

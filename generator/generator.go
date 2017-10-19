@@ -59,9 +59,24 @@ func (f *FromNode) Next() *{{.OutputType}} {
 }
 `
 
+// TODO: support 'ON'
+type joinStruct struct {
+	OutputType string
+}
+
+var joinTemplate = `
+type JoinNode struct {
+	It *
+}
+
+func (j *JoinNode) Next() *{{.OutputType}} {
+
+}
+
 type baseStruct struct {
 	OutputType string
 }
+`
 
 var baseTemplate = `
 func Exec(node SelectNode) []{{.OutputType}}{
@@ -95,11 +110,16 @@ import (
 	"github.com/kvigen/go-linq/types"
 )
 
+type Node interface {
+}
+
 {{.Select}}
 {{.From}}
 {{.Base}}
 
 `
+
+// TODO: Want to support SELECT a, b FROM students JOIN districts ON students.district_id = districts_id
 
 func Generate(node ast.SelectNode) (string, error) {
 	// Convert the ast nodes into execution nodes??? and return that too?
