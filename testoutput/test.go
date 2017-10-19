@@ -6,6 +6,6 @@ import (
 )
 
 func RunTheFilter(input []types.Input) []types.Output {
-	output := template.Exec(template.SelectNode{})
+	output := template.Exec(template.SelectNode{It: &template.FromNode{Data:input}})
 	return output
 }

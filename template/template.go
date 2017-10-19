@@ -1,3 +1,4 @@
+
 package template
 
 // TODO: This is a major hack... though we can require people to pass in the types
@@ -5,6 +6,8 @@ package template
 import (
 	"github.com/kvigen/go-linq/types"
 )
+
+
 
 type SelectNode struct {
 	It *FromNode
@@ -22,22 +25,23 @@ func (s *SelectNode) Next() *types.Output {
 	}
 }
 
+
 type FromNode struct {
-	Data    []interface{}
+	Data    []types.Input
 	current int
-}
+}	
 
 func (f *FromNode) Next() *types.Input {
 	if f.current >= len(f.Data) {
 		return nil
 	}
-	// TODO: Fix this...
-	toReturn := f.Data[f.current].(types.Input)
+	toReturn := f.Data[f.current]
 	f.current++
 	return &toReturn
 }
 
-func Exec(node SelectNode) []types.Output {
+
+func Exec(node SelectNode) []types.Output{
 
 	results := make([]types.Output, 0)
 
@@ -50,3 +54,5 @@ func Exec(node SelectNode) []types.Output {
 	}
 	return results
 }
+
+

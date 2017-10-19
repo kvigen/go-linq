@@ -14,6 +14,7 @@ import (
 // TODO: These should obviously not be global variables...
 var start int
 var end int
+var fromClause string
 
 // TransformFile returns the new file as a string and a bool to indicate
 // if it actually did any transformations
@@ -67,7 +68,7 @@ func TransformFile(src string) (string, bool, error) {
 	// TODO: hard-coding these is obviously wrong... In particular it doesn't
 	// handle comments correctly... Somehow doesn't mix nicely with the imports...
 	result := str[:start+3]
-	result += "template.Exec(template.SelectNode{})"
+	result += fmt.Sprintf("template.Exec(template.SelectNode{It: &template.FromNode{Data:%s}})", fromClause)
 	result += str[end+24:]
 	fmt.Println(result)
 
@@ -95,7 +96,7 @@ func parse(sql string) parsedSQL {
 
 	// TODO: Bounds checking... or really just a better lexer / parser
 	selectStatement := sql[selectPos+7 : fromPos]
-	fromStatement := sql[fromPos+5:]
+	fromStatement := sql[fromPos+5 : len(sql)-1]
 
 	return parsedSQL{Select: selectStatement, From: fromStatement}
 }
@@ -136,6 +137,7 @@ func (v visitor) Visit(node ast.Node) ast.Visitor {
 			panic("something has gone horribly wrong")
 		}
 		sql := parse(arg.Value)
+		fromClause = sql.From
 		fmt.Printf("SQL: %+v\n", sql)
 
 		iden := expr.(*ast.Ident)

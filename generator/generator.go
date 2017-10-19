@@ -45,7 +45,7 @@ type fromStruct struct {
 // others...
 var fromTemplate = `
 type FromNode struct {
-	Data    []interface{}
+	Data    []{{.OutputType}}
 	current int
 }	
 
@@ -53,8 +53,7 @@ func (f *FromNode) Next() *{{.OutputType}} {
 	if f.current >= len(f.Data) {
 		return nil
 	}
-	// TODO: Fix this...
-	toReturn := f.Data[f.current].(types.Input)
+	toReturn := f.Data[f.current]
 	f.current++
 	return &toReturn
 }
