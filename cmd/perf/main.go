@@ -37,6 +37,20 @@ func main() {
 	}
 
 	fmt.Printf("Total: %d in %dms\n", total, time.Since(start)/1000/1000)
+
+	total = int64(0)
+	start = time.Now()
+	giantChannel := make(chan int64, numEntries+10)
+	for i := 0; i < numEntries; i++ {
+		giantChannel <- 2
+	}
+
+	for i := 0; i < numEntries; i++ {
+		total += <-giantChannel
+	}
+
+	fmt.Printf("Total: %d in %dms\n", total, time.Since(start)/1000/1000)
+
 	/*
 		inputs := make([]*input, 0)
 
