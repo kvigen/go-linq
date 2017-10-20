@@ -24,10 +24,15 @@ func main() {
 	//results := From(inputs).Map(func(str string) string { return str + "a" }).
 	//	Map(func(str string) string { return str + "b" }).Array()
 	// TODO: Verify that the below is wrong...
+
+	inputs2 := []interface{}{input{"xa"}}
+
+	otherTable := From(inputs2)
 	// results := From(inputs).Map(func(str string) string { return str + "b" }).Array()
 	results := From(inputs).
 		Map(func(i input) intermediate { return intermediate{Str: i.Str + "a"} }).
-		Map(func(i intermediate) output { return output{Str: i.Str + "b"} }).
+		Join(otherTable, func(i intermediate) string { return i.Str }, func(i input) string { return i.Str }).
+		//Map(func(i intermediate) output { return output{Str: i.Str + "b"} }).
 		Array()
 	fmt.Printf("Result %+v\n", results)
 
@@ -67,6 +72,12 @@ func (t Table) Map(fn interface{}) Table {
 	}
 	// just a different return object...
 	return Table{iTable: &mapTable{it: t, fnValue: reflect.ValueOf(fn)}}
+}
+
+func (t Table) Join(t2 Table, f1 interface{}, f2 interface{}) Table {
+	// TODO: Add some form of caching here...
+
+	return Table{iTable: &joinTable{itLeft: t, itRight: t2, idLeft: reflect.ValueOf(f1), idRight: reflect.ValueOf(f2)}}
 }
 
 func (t Table) Array() []interface{} {
@@ -109,6 +120,48 @@ func (t *mapTable) Next() (interface{}, bool) {
 	input := []reflect.Value{reflect.ValueOf(val)}
 	output := t.fnValue.Call(input)
 	return output[0].Interface(), true
+}
+
+// TODO: support different kinds of joins...
+type joinTable struct {
+	itRight Table
+	itLeft  Table
+	idRight reflect.Value // function
+	idLeft  reflect.Value // function
+	right   map[interface{}]interface{}
+}
+
+func (t *joinTable) Next() (interface{}, bool) {
+	if t.right == nil {
+		// Setup the hash table
+		t.right = make(map[interface{}]interface{})
+		for {
+			res, ok := t.itRight.Next()
+			if !ok {
+				break
+			}
+			input := []reflect.Value{reflect.ValueOf(res)}
+			output := t.idRight.Call(input)
+			o := output[0].Interface()
+			// TODO: this assumes that only one things has a given key
+			t.right[o] = res
+		}
+	}
+
+	res, ok := t.itLeft.Next()
+	if !ok {
+		return nil, false
+	}
+	input := []reflect.Value{reflect.ValueOf(res)}
+	output := t.idLeft.Call(input)
+	o := output[0].Interface()
+	// TODO: Right now we're assuming that there's only one match
+	val := t.right[o]
+	// TODO: name these variables better...
+	return map[string]interface{}{
+		"lhs": res,
+		"rhs": val,
+	}, true
 }
 
 // in general this would be auto-generated. A generics wrapper...
